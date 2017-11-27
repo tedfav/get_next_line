@@ -1,72 +1,80 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   get_next_line.c                                    :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: tfavart <marvin@42.fr>                     +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2017/11/27 08:00:00 by tfavart           #+#    #+#             */
+/*   Updated: 2017/11/27 15:48:11 by tfavart          ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "libft.h"
 #include "get_next_line.h"
 
-static int				ft_line(char **line, char **str, int i)
+char				*ft_realloc(char * str)
 {
-	int			x;
-	int			y;
+	char			*tmp;
 
+	if (str == NULL)
+		if (!(str = ft_strnew(BUFF_SIZE)))
+			return (0);
+	if (str != NULL)
+	{
+		tmp = str;
+		if (!(str = ft_strnew(ft_strlen(tmp) + BUFF_SIZE)))
+			return (0);
+		ft_strcpy(str, tmp);
+		free(tmp);
+	}
+	return (str);
+}
+
+void				ft_line(char **line, char **str)
+{
+	int				i;
+	int				x;
+	char			*tmp;
+
+	i = 0;
 	x = 0;
-	y = 0;
-	if (i != 0 && ft_strlen(*str) != 0)
+	tmp = *str;
+	while ((*str)[i] != '\n' && (*str)[i] != '\0')
+		i++;
+	if (!(*line = ft_strnew(i)))
+		return ;
+	while (x < i)
 	{
-		while ((*str)[x] != '\n')
-		{
-			(*line)[x] = (*str)[x];
-			x++;
-		}
-		(*line)[x] = '\0';
+		(*line)[x] = (*str)[x];
 		x++;
-		if ((*str)[0] == '\n')
-		{
-			while ((*str)[x])
-				(*str)[y++] = (*str)[x++];
-			(*str)[y] = 0;
-			return (2);
-		}
-		while ((*str)[x])
-			(*str)[y++] = (*str)[x++];
-		(*save)[y] = '\0';
 	}
-	return (1);
+	i++;
+	*str = ft_strsub(*str, i, ft_strlen(*str));
+	free(tmp);
 }
 
-static int				ft_realloc(char **str)
+int					get_next_line(int fd, char **line)
 {
-	char 		*tmp;
+	static char		*str;
+	int				red;
 
-	if (!(tmp = ft_strnew(ft_strlen(*str))))
-		return (0);
-	ft_strcpy(tmp, *str);
-	if (!(*str = ft_strnew(ft_strlen(tmp) + BUFF_SIZE)))
-		return (0);
-	ft_strcpy(*str, tmp);
-	return (1);
-}
-
-int				get_next_line(int fd, char **line)
-{
-	int			i;
-	static char	*str;
-
-	if (fd < 0 || !(str = ft_strnew(BUFF_SIZE)
-		&& *line = ft_strnew(BUFF_SIZE)))
+	if (!(*line = ft_strnew(BUFF_SIZE)))
 		return (-1);
-	while ((i = read(fd, *line, BUFF_SIZE)) > 0)
+	while ((red = read(fd, *line, BUFF_SIZE)))
 	{
-		if (!(ft_realloc(&str)))
+		if (!(str = ft_realloc(str)))
 			return (-1);
-		ft_strcat(str, *line);
-		if (ft_memchr(str, '\n', BUFF_SIZE))
-			break ;
+		ft_strncat(str, *line, ft_strlen(str) + BUFF_SIZE);
+		if (ft_strchr(str, '\n'))
+			break;
 	}
-	if ((ft_line(line, &str, i) == 2))
-		return (1):
-	if (ft_memcpy(*line, str, ft_strlen(*line)) == 0)
+	ft_line(line, &str);
+	if (red >= 0 && str[0] != '\0')
+		return (1);
+	else
 	{
-		if (!(*line = ft_strdup("")))
-			return (1);
-		return(0);
+		free(str);
+		return (0);
 	}
-	return (1);
 }
