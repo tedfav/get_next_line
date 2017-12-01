@@ -6,75 +6,94 @@
 /*   By: tfavart <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/11/27 08:00:00 by tfavart           #+#    #+#             */
-/*   Updated: 2017/11/27 15:48:11 by tfavart          ###   ########.fr       */
+/*   Updated: 2017/12/01 15:18:08 by tfavart          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "libft.h"
 #include "get_next_line.h"
 
-char				*ft_realloc(char * str)
+char				*ft_realloc(char *str, int red)
 {
 	char			*tmp;
 
 	if (str == NULL)
-		if (!(str = ft_strnew(BUFF_SIZE)))
+		if (!(str = ft_strnew(red)))
 			return (0);
 	if (str != NULL)
 	{
 		tmp = str;
-		if (!(str = ft_strnew(ft_strlen(tmp) + BUFF_SIZE)))
+		if (!(str = ft_strnew(ft_strlen(tmp) + red)))
 			return (0);
-		ft_strcpy(str, tmp);
+		ft_memcpy(str, tmp, ft_strlen(tmp));
 		free(tmp);
 	}
 	return (str);
 }
 
-void				ft_line(char **line, char **str)
+int					ft_line(char **line, char **str)
 {
 	int				i;
 	int				x;
 	char			*tmp;
 
 	i = 0;
-	x = 0;
+	x = -1;
 	tmp = *str;
-	while ((*str)[i] != '\n' && (*str)[i] != '\0')
+	while ((*str)[i] != '\0' && (*str)[i] != '\n')
 		i++;
 	if (!(*line = ft_strnew(i)))
-		return ;
-	while (x < i)
-	{
+		return (-1);
+	while (++x < i && (*str)[x] != '\0')
 		(*line)[x] = (*str)[x];
-		x++;
+	if ((*str)[i] == '\n')
+		i++;
+	*str = ft_strsub(*str, i, ft_strlen(*str) - i);
+	if (*tmp == '\0')
+	{
+		free(tmp);
+		return (1);
 	}
-	i++;
-	*str = ft_strsub(*str, i, ft_strlen(*str));
 	free(tmp);
+	return (0);
+}
+
+int					ft_read_fd(char **str, int fd)
+{
+	char			*buff;
+	int				red;
+
+	red = 1;
+	if (!(buff = ft_strnew(BUFF_SIZE)))
+		return (-1);
+	while (!(ft_strchr(buff, '\n')) && red > 0)
+	{
+		if ((red = read(fd, buff, BUFF_SIZE)) == -1)
+			return (-1);
+		if (!(*str = ft_realloc(*str, red)))
+			return (-1);
+		ft_strncat(*str, buff, red);
+	}
+	free(buff);
+	return (red);
 }
 
 int					get_next_line(int fd, char **line)
 {
 	static char		*str;
 	int				red;
+	int				i;
 
-	if (!(*line = ft_strnew(BUFF_SIZE)))
+	i = 0;
+	if ((fd < 0 || !(line)))
 		return (-1);
-	while ((red = read(fd, *line, BUFF_SIZE)))
-	{
-		if (!(str = ft_realloc(str)))
-			return (-1);
-		ft_strncat(str, *line, ft_strlen(str) + BUFF_SIZE);
-		if (ft_strchr(str, '\n'))
-			break;
-	}
-	ft_line(line, &str);
-	if (red >= 0 && str[0] != '\0')
-		return (1);
-	else
-	{
-		free(str);
+	*line = NULL;
+	if ((red = ft_read_fd(&str, fd)) == -1)
+		return (-1);
+	if ((i = ft_line(line, &str)) == -1)
+		return (-1);
+	if (str == NULL && red == 0)
 		return (0);
-	}
+	if (*str == '\0' && red == 0 && i == 1)
+		return (0);
+	return (1);
 }
