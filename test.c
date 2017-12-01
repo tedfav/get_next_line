@@ -1,72 +1,67 @@
 #include "get_next_line.h"
 
-int		ft_malloc_again(char **save)
+int		line_verif(char **line, char **tmp, int res, char **str)
+{
+	*str = NULL;
+	if (res == 0 && ft_strlen(*tmp) > 0)
+	{
+		*line = *tmp;
+		*tmp = NULL;
+		return (1);
+	}
+	return (res);
+}
+
+char	*read_line(char *tmp)
+{
+	int		t;
+	char	*line;
+
+	t = 0;
+	while (tmp[t] != '\n')
+		t++;
+	line = (char *)malloc((t + 1) * sizeof(char));
+	line = ft_strncpy(line, tmp, t);
+	line[t] = '\0';
+	return (line);
+}
+
+char	*cpycat(char *s1, char *s2)
 {
 	char	*tmp;
 
-	if (!(tmp = ft_strnew(ft_strlen(*save))))
-		return (0);
-	ft_strcpy(tmp, *save);
-	*save = NULL;
-	if (!(*save = ft_strnew(ft_strlen(tmp) + BUFF_SIZE)))
-		return (0);
-	ft_strcpy(*save, tmp);
-	return (1);
+	tmp = NULL;
+	tmp = ft_memalloc(ft_strlen(s1) + ft_strlen(s2));
+	s1 ? tmp = ft_strcpy(tmp, s1) : NULL;
+	s1 ? tmp = ft_strncat(tmp, s2, ft_strlen(s2)) : NULL;
+	//printf("%s\n", tmp);
+	return (tmp);
 }
 
-int		fill_line(int j, char **save, char **line)
+int		get_next_line(int const fd, char **line)
 {
-	int		i;
-	int		y;
+	static char		*str = NULL;
+	int				res;
+	char			*buf;
+	char			*tmp;
 
-	y = 0;
-	i = 0;
-	if (j != 0 || ft_strlen((*save)) != 0)
-	{
-		while ((*save)[i] != '\n')
-		{
-			(*line)[i] = (*save)[i];
-			i++;
-		}
-		(*line)[i++] = '\0';
-		if ((*save)[0] == '\n')
-		{
-			while ((*save)[i])
-				(*save)[y++] = (*save)[i++];
-			(*save)[y] = '\0';
-			return (2);
-		}
-		while ((*save)[i])
-			(*save)[y++] = (*save)[i++];
-		(*save)[y] = '\0';
-	}
-	return (1);
-}
-
-int		get_next_line(int fd, char **line)
-{
-	int			j;
-	static char	*save;
-
-	if (fd < 0 || (!save && !(save = ft_strnew(BUFF_SIZE))))
+	if (fd < 0 || !line || BUFF_SIZE < 1 || BUFF_SIZE > 10000000)
 		return (-1);
-	if (!(*line = (char *)malloc(sizeof(char) * BUFF_SIZE)))
-		return (-1);
-	while ((j = read(fd, *line, BUFF_SIZE)) > 0)
+	buf = ft_strnew(BUFF_SIZE + 1);
+	if (str == NULL)
+		str = ft_memalloc(BUFF_SIZE);
+	tmp = ft_strncpy(ft_memalloc(BUFF_SIZE), str, BUFF_SIZE);
+	while (!(ft_strchr(tmp, '\n')))
 	{
-		if (!(ft_malloc_again(&save)))
-			return (-1);
-		ft_strncat(save, *line, BUFF_SIZE);
-		if (ft_memchr(*line, '\n', BUFF_SIZE))
-			break ;
+		if ((res = read(fd, buf, BUFF_SIZE)) < 1)
+			return (line_verif(line, &tmp, res, &str));
+		buf[res] = '\0';
+		tmp = cpycat(tmp, buf);
 	}
-	if ((fill_line(j, &save, &(*line))) == 2)
-		return (1);
-	if (ft_memcmp((*line), save, ft_strlen(*line)) == 0)
-	{
-		if (!(*line = ft_strdup("")))
-			return (1);
-		return (0);
-	}
+	*line = read_line(tmp);
+	if (ft_strchr(tmp, '\n'))
+		str = ft_strncpy(str, ft_strchr(tmp, '\n') + 1, BUFF_SIZE);
+	free(tmp);
+	free(buf);
 	return (1);
 }
