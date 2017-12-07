@@ -6,7 +6,7 @@
 /*   By: tfavart <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/11/09 17:52:24 by tfavart           #+#    #+#             */
-/*   Updated: 2017/11/27 15:26:50 by tfavart          ###   ########.fr       */
+/*   Updated: 2017/12/04 13:46:22 by tfavart          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ char		*ft_strsub(char const *s, unsigned int start, size_t len)
 	i = 0;
 	if (s == NULL)
 		return (NULL);
-	if (!(str = ft_strnew(len + 1)))
+	if (!(str = ft_strnew(len)))
 		return (NULL);
 	while (s[start] != '\0' && i < len)
 	{
